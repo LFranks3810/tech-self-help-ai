@@ -1,39 +1,24 @@
-﻿document.getElementById('chat-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const input = document.getElementById('chat-input');
-  const message = input.value.trim();
-  if (!message) return;
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SentriForge IT Self-Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white">
+    <!-- Your App UI Here -->
+    <div id="chat-messages"></div>
+    <form id="chat-form">
+        <input type="text" id="chat-input" />
+        <button type="submit">Send</button>
+    </form>
 
-  const chatContainer = document.getElementById('chat-messages');
-  
-  // Append User Message
-  chatContainer.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-blue-600 text-white p-3 rounded-lg max-w-md">${message}</div></div>`;
-  input.value = '';
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  let botReply = "I'm here to help with SentriForge support! Let me check that for you.";
-
-  try {
-    const apiUrl = localStorage.getItem('sentriforge_api_url') || '';
-    const response = await fetch(`${apiUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
-    const data = await response.json();
-    if (data && data.reply) {
-      botReply = data.reply;
-    }
-  } catch (err) {
-    console.warn("API Fetch failed, using local backup");
-    if (message.toLowerCase().includes('password')) {
-      botReply = "To reset your password, visit the self-service portal or submit an Access ticket.";
-    } else if (message.toLowerCase().includes('vpn')) {
-      botReply = "For VPN issues, verify your MFA token in Microsoft Authenticator and re-authenticate.";
-    }
-  }
-
-  // Append Bot Response
-  chatContainer.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-slate-800 text-white p-3 rounded-lg max-w-md">${botReply}</div></div>`;
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-});
+    <script>
+        // All your JavaScript code goes INSIDE these script tags
+        document.getElementById('chat-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Your chat logic here
+        });
+    </script>
+</body>
+</html>
