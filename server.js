@@ -59,3 +59,10 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`SentriForge Backend Running on Port ${PORT}`);
 });
+
+app.get('/api/kb', (req, res) => {
+  res.json([
+    { id: 1, title: 'Active Directory Password Reset', category: 'Access', content: 'Use self-service portal or contact IT.' },
+    { id: 2, title: 'VPN Connection Failure', category: 'Network', content: 'Verify MFA token and re-authenticate.' }
+  ]);
+});
