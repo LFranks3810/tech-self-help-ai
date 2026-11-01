@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SentriForge - IT Self-Service & Support</title>
+    <title>SentriForge - IT Self-Service & Support Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-    <!-- Top Navigation Bar -->
+    <!-- Top Navigation Bar (4 Tabs) -->
     <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
@@ -19,17 +19,11 @@
                     <p class="text-xs text-slate-400">IT Help Desk & Self-Service Portal</p>
                 </div>
             </div>
-            <!-- Changed from flex to flex-wrapto ensure tabs always show -->
-            <nav class="flex space-x-2">
+            <nav class="flex flex-wrap space-x-1">
                 <button onclick="switchTab('chat')" id="btn-chat" class="nav-tab px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition"><i class="fa-solid fa-robot mr-1.5"></i>AI Assistant</button>
                 <button onclick="switchTab('kb')" id="btn-kb" class="nav-tab px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-book mr-1.5"></i>Knowledge Base</button>
                 <button onclick="switchTab('tickets')" id="btn-tickets" class="nav-tab px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-ticket mr-1.5"></i>Submit Ticket</button>
-<section id="tab-dashboard" class="tab-content hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
-        <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-chart-pie mr-2 text-blue-500"></i>Help Desk Dashboard</h2>
-        <p class="text-sm text-slate-300">Overview of ticket metrics and active system statuses.</p>
-    </div>
-</section>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-tab px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-chart-pie mr-1.5"></i>Dashboard</button>
             </nav>
         </div>
     </header>
@@ -37,15 +31,15 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
 
-        <!-- AI Chat Tab Content -->
+        <!-- Tab 1: AI Chat Assistant -->
         <section id="tab-chat" class="tab-content block">
             <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-lg flex flex-col h-[70vh]">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-xl">
-                    <span class="font-semibold text-slate-200"><i class="fa-solid fa-circle text-emerald-500 text-xs mr-2"></i>SentriForge AI Assistant Online</span>
+                    <span class="font-semibold text-slate-200 text-sm"><i class="fa-solid fa-circle text-emerald-500 text-xs mr-2"></i>SentriForge AI Assistant Online</span>
                 </div>
                 <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
                     <div class="flex items-start space-x-3">
-                        <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SF</div>
+                        <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">SF</div>
                         <div class="bg-slate-800 p-3 rounded-lg max-w-md text-sm text-slate-200 shadow">
                             Hello! I am your SentriForge assistant. How can I help you troubleshoot your IT issue today?
                         </div>
@@ -58,31 +52,33 @@
             </div>
         </section>
 
-        <!-- Knowledge Base Tab Content -->
+        <!-- Tab 2: Knowledge Base -->
         <section id="tab-kb" class="tab-content hidden">
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
-                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-book mr-2 text-blue-500"></i>IT Knowledge Base</h2>
-                <div class="space-y-4">
+                <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-book mr-2 text-blue-500"></i>IT Knowledge Base</h2>
+                <div id="kb-articles-list" class="space-y-4">
                     <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
-                        <h3 class="font-semibold text-blue-400">Active Directory Password Reset</h3>
+                        <span class="text-xs text-blue-400 font-semibold uppercase">Access</span>
+                        <h3 class="font-semibold text-white mt-1">Active Directory Password Reset</h3>
                         <p class="text-sm text-slate-300 mt-1">Use the self-service portal or contact IT administrators to reset corporate credentials securely.</p>
                     </div>
                     <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
-                        <h3 class="font-semibold text-blue-400">VPN Connection Failure & MFA</h3>
+                        <span class="text-xs text-blue-400 font-semibold uppercase">Network</span>
+                        <h3 class="font-semibold text-white mt-1">VPN Connection Failure & MFA</h3>
                         <p class="text-sm text-slate-300 mt-1">Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Submit Ticket Tab Content -->
+        <!-- Tab 3: Submit Ticket -->
         <section id="tab-tickets" class="tab-content hidden">
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-2xl mx-auto shadow-lg">
-                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-ticket mr-2 text-blue-500"></i>Submit Support Ticket</h2>
+                <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-ticket mr-2 text-blue-500"></i>Submit Support Ticket</h2>
                 <form id="ticket-form" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Subject</label>
-                        <input type="text" id="ticket-subject" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" id="ticket-subject" required placeholder="Brief description of the issue" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Priority</label>
@@ -95,34 +91,62 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
-                        <textarea id="ticket-desc" rows="4" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></textarea>
+                        <textarea id="ticket-desc" rows="4" required placeholder="Detailed explanation of error codes or symptoms..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></textarea>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition">Submit Ticket</button>
                 </form>
             </div>
         </section>
 
+        <!-- Tab 4: Dashboard / Metrics -->
+        <section id="tab-dashboard" class="tab-content hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
+                <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-chart-pie mr-2 text-blue-500"></i>Help Desk Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Open Tickets</p>
+                        <p class="text-2xl font-bold text-white mt-1">3</p>
+                    </div>
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <p class="text-xs text-slate-400 uppercase font-semibold">Resolved Today</p>
+                        <p class="text-2xl font-bold text-emerald-400 mt-1">12</p>
+                    </div>
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <p class="text-xs text-slate-400 uppercase font-semibold">System Status</p>
+                        <p class="text-2xl font-bold text-emerald-400 mt-1">Operational</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Application Script Logic -->
     <script>
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
             document.querySelectorAll('.nav-tab').forEach(el => {
                 el.classList.remove('bg-blue-600', 'text-white');
                 el.classList.add('text-slate-300', 'hover:bg-slate-800');
             });
 
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
-            document.getElementById('tab-' + tabName).classList.add('block');
+            const activeTab = document.getElementById('tab-' + tabName);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+                activeTab.classList.add('block');
+            }
             
             const activeBtn = document.getElementById('btn-' + tabName);
-            activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
-            activeBtn.classList.add('bg-blue-600', 'text-white');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+            }
         }
 
-        // Chat Form Handler
+        // Chat Submission Handler
         document.getElementById('chat-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const input = document.getElementById('chat-input');
@@ -130,7 +154,7 @@
             if (!message) return;
 
             const chatContainer = document.getElementById('chat-messages');
-            chatContainer.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-lg max-w-md text-sm">${message}</div></div>`;
+            chatContainer.innerHTML += `<div class="flex justify-end mb-3"><div class="bg-blue-600 text-white p-3 rounded-lg max-w-md text-sm">${message}</div></div>`;
             input.value = '';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -152,11 +176,11 @@
                 }
             }
 
-            chatContainer.innerHTML += `<div class="flex items-start space-x-3"><div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SF</div><div class="bg-slate-800 p-3 rounded-lg max-w-md text-sm text-slate-200 shadow">${botReply}</div></div>`;
+            chatContainer.innerHTML += `<div class="flex items-start space-x-3 mb-3"><div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">SF</div><div class="bg-slate-800 p-3 rounded-lg max-w-md text-sm text-slate-200 shadow">${botReply}</div></div>`;
             chatContainer.scrollTop = chatContainer.scrollHeight;
         });
 
-        // Ticket Form Handler
+        // Ticket Form Submission Handler
         document.getElementById('ticket-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             alert('Ticket submitted successfully! Our IT team will review it shortly.');
@@ -165,25 +189,3 @@
     </script>
 </body>
 </html>
-
-async function loadKnowledgeBase() {
-  try {
-    const response = await fetch('/api/kb');
-    const articles = await response.json();
-    const kbContainer = document.getElementById('kb-articles-list');
-    if (!kbContainer) return;
-
-    kbContainer.innerHTML = articles.map(art => `
-      <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg mb-3">
-        <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
-        <h3 class="font-semibold text-white mt-1">${art.title}</h3>
-        <p class="text-sm text-slate-300 mt-1">${art.content}</p>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.warn("Could not load KB articles from server.");
-  }
-}
-
-// Call this inside your switchTab function when clicking the 'kb' tab
-// e.g., if (tabName === 'kb') loadKnowledgeBase();
