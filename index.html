@@ -190,57 +190,23 @@
 </body>
 </html>
 
-<!-- Application Script Logic -->
-    <script>
-        // 1. The switchTab function goes right here
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.add('hidden');
-                el.classList.remove('block');
-            });
-            document.querySelectorAll('.nav-tab').forEach(el => {
-                el.classList.remove('bg-blue-600', 'text-white');
-                el.classList.add('text-slate-300', 'hover:bg-slate-800');
-            });
+// Knowledge Base Fetch Function
+async function loadKnowledgeBase() {
+    const kbContainer = document.getElementById('kb-articles-list');
+    if (!kbContainer) return;
 
-            const activeTab = document.getElementById('tab-' + tabName);
-            if (activeTab) {
-                activeTab.classList.remove('hidden');
-                activeTab.classList.add('block');
-            }
-            
-            const activeBtn = document.getElementById('btn-' + tabName);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
-                activeBtn.classList.add('bg-blue-600', 'text-white');
-            }
-
-            // Optional: load KB articles if the user clicks the KB tab
-            if (tabName === 'kb') {
-                loadKnowledgeBase();
-            }
-        }
-
-        // 2. Your loadKnowledgeBase function goes right here too
-        async function loadKnowledgeBase() {
-            const kbContainer = document.getElementById('kb-articles-list');
-            if (!kbContainer) return;
-
-            try {
-                const response = await fetch('/api/kb');
-                const articles = await response.json();
-                
-                kbContainer.innerHTML = articles.map(art => `
-                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg mb-3">
-                        <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
-                        <h3 class="font-semibold text-white mt-1">${art.title}</h3>
-                        <p class="text-sm text-slate-300 mt-1">${art.content}</p>
-                    </div>
-                `).join('');
-            } catch (err) {
-                console.warn("Could not fetch KB articles from server.");
-            }
-        }
-    </script>
-</body>
-</html>
+    try {
+        const response = await fetch('/api/kb');
+        const articles = await response.json();
+        
+        kbContainer.innerHTML = articles.map(art => `
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg mb-3">
+                <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
+                <h3 class="font-semibold text-white mt-1">${art.title}</h3>
+                <p class="text-sm text-slate-300 mt-1">${art.content}</p>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.warn("Could not fetch KB articles from server.");
+    }
+}
