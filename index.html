@@ -57,16 +57,7 @@
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
                 <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-book mr-2 text-blue-500"></i>IT Knowledge Base</h2>
                 <div id="kb-articles-list" class="space-y-4">
-                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
-                        <span class="text-xs text-blue-400 font-semibold uppercase">Access</span>
-                        <h3 class="font-semibold text-white mt-1">Active Directory Password Reset</h3>
-                        <p class="text-sm text-slate-300 mt-1">Use the self-service portal or contact IT administrators to reset corporate credentials securely.</p>
-                    </div>
-                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
-                        <span class="text-xs text-blue-400 font-semibold uppercase">Network</span>
-                        <h3 class="font-semibold text-white mt-1">VPN Connection Failure & MFA</h3>
-                        <p class="text-sm text-slate-300 mt-1">Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.</p>
-                    </div>
+                    <!-- Dynamic articles will load here from server.js -->
                 </div>
             </div>
         </section>
@@ -144,6 +135,32 @@
                 activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
                 activeBtn.classList.add('bg-blue-600', 'text-white');
             }
+
+            // Fetch Knowledge Base articles when the KB tab is selected
+            if (tabName === 'kb') {
+                loadKnowledgeBase();
+            }
+        }
+
+        // Knowledge Base Fetch Function
+        async function loadKnowledgeBase() {
+            const kbContainer = document.getElementById('kb-articles-list');
+            if (!kbContainer) return;
+
+            try {
+                const response = await fetch('/api/kb');
+                const articles = await response.json();
+                
+                kbContainer.innerHTML = articles.map(art => `
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg mb-3">
+                        <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
+                        <h3 class="font-semibold text-white mt-1">${art.title}</h3>
+                        <p class="text-sm text-slate-300 mt-1">${art.content}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.warn("Could not fetch KB articles from server.");
+            }
         }
 
         // Chat Submission Handler
@@ -189,24 +206,3 @@
     </script>
 </body>
 </html>
-
-// Knowledge Base Fetch Function
-async function loadKnowledgeBase() {
-    const kbContainer = document.getElementById('kb-articles-list');
-    if (!kbContainer) return;
-
-    try {
-        const response = await fetch('/api/kb');
-        const articles = await response.json();
-        
-        kbContainer.innerHTML = articles.map(art => `
-            <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg mb-3">
-                <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
-                <h3 class="font-semibold text-white mt-1">${art.title}</h3>
-                <p class="text-sm text-slate-300 mt-1">${art.content}</p>
-            </div>
-        `).join('');
-    } catch (err) {
-        console.warn("Could not fetch KB articles from server.");
-    }
-}
