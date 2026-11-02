@@ -66,3 +66,27 @@ app.get('/api/kb', (req, res) => {
     { id: 2, title: 'VPN Connection Failure', category: 'Network', content: 'Verify MFA token and re-authenticate.' }
   ]);
 });
+
+// Knowledge Base Endpoint in server.js
+app.get('/api/kb', (req, res) => {
+  res.json([
+    { 
+      id: 1, 
+      title: 'Active Directory Password Reset', 
+      category: 'Access', 
+      content: 'Use self-service portal or contact IT administrators to reset corporate credentials securely.' 
+    },
+    { 
+      id: 2, 
+      title: 'VPN Connection Failure & MFA', 
+      category: 'Network', 
+      content: 'Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.' 
+    },
+    { 
+      id: 3, 
+      title: 'Network Printer Setup & Drivers', 
+      category: 'Hardware', 
+      content: 'Connect to the print server via \\print-srv01 and select your department printer.' 
+    }
+  ]);
+});
