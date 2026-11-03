@@ -16,8 +16,8 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.static(__dirname)); // Serve index.html and static files
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI();
+// Initialize Gemini Client explicitly with the environment variable
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Knowledge Base Data Store
 const kbArticles = [
