@@ -1,62 +1,90 @@
-﻿const express = require('express');
-const cors = require('cors');
-const path = require('path');
+﻿import express from 'express';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { GoogleGenAI } from '@google/genai';
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 3000;
+
+// Setup directory pathing for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
+app.use(express.static(__dirname)); // Serve index.html and static files
 
-// Serve static frontend files (like index.html)
-app.use(express.static(path.join(__dirname)));
+// Initialize Gemini Client
+const ai = new GoogleGenAI();
 
-// 1. Knowledge Base API Endpoint (Sends articles to index.html)
-app.get('/api/kb', (req, res) => {
-  res.json([
-    { 
-      id: 1, 
-      title: 'Active Directory Password Reset', 
-      category: 'Access', 
-      content: 'Use self-service portal or contact IT administrators to reset corporate credentials securely.' 
-    },
-    { 
-      id: 2, 
-      title: 'VPN Connection Failure & MFA', 
-      category: 'Network', 
-      content: 'Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.' 
-    },
-    { 
-      id: 3, 
-      title: 'Network Printer Setup & Drivers', 
-      category: 'Hardware', 
-      content: 'Connect to the print server via \\print-srv01 and select your department printer.' 
-    }
-  ]);
-});
-
-// 2. AI Chat API Endpoint (Sends bot replies to index.html)
-app.post('/api/chat', (req, res) => {
-  const { message } = req.body;
-  let reply = "I'm here to help with SentriForge support! Let me check that for you.";
-  
-  const msgLower = (message || '').toLowerCase();
-  if (msgLower.includes('password')) {
-    reply = "To reset your password, visit the self-service portal or submit an Access ticket.";
-  } else if (msgLower.includes('vpn')) {
-    reply = "For VPN issues, verify your MFA token in Microsoft Authenticator and re-authenticate.";
-  } else if (msgLower.includes('printer')) {
-    reply = "For network printer issues, verify you are connected to the office network and map to \\print-srv01.";
+// Knowledge Base Data Store
+const kbArticles = [
+  {
+    id: 'kb-1',
+    category: 'ACCESS',
+    title: 'Active Directory Password Reset',
+    content: 'Use the self-service portal or contact IT administrators to reset corporate credentials securely.'
+  },
+  {
+    id: 'kb-2',
+    category: 'NETWORK',
+    title: 'VPN Connection Failure & MFA',
+    content: 'Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.'
   }
+];
 
-  res.json({ success: true, reply });
+// Helper: Query matching KB context
+function findRelevantKB(userQuery) {
+  const queryLower = userQuery.toLowerCase();
+  const matches = kbArticles.filter(art => 
+    art.title.toLowerCase().includes(queryLower) || 
+    art.content.toLowerCase().includes(queryLower) ||
+    art.category.toLowerCase().includes(queryLower)
+  );
+
+  if (matches.length === 0) return 'No specific internal KB articles found for this issue.';
+
+  return matches.map(art => `[${art.category}] ${art.title}: ${art.content}`).join('\n');
+}
+
+// API Route: Return Knowledge Base Articles
+app.get('/api/kb', (req, res) => {
+  res.json(kbArticles);
 });
 
-// Fallback route to serve index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+// API Route: Gemini Chat Endpoint
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required.' });
+    }
+
+    const kbContext = findRelevantKB(prompt);
+
+    const fullPrompt = `
+You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
+
+Internal Knowledge Base Context:
+${kbContext}
+
+User Query: ${prompt}
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: fullPrompt,
+    });
+
+    res.json({ reply: response.text });
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+    res.status(500).json({ error: 'Failed to process AI response.' });
+  }
 });
 
-// Render dynamically assigns a port via process.env.PORT
-const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`SentriForge Backend Running on Port ${PORT}`);
+  console.log(`SentriForge server running at http://localhost:${PORT}`);
 });
