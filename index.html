@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+﻿
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SentriForge - IT Support & Self-Service Portal</title>
+  <title>SentriForge - IT Help Desk & Self-Service Portal</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Marked.js CDN for Markdown Parsing -->
@@ -15,7 +16,7 @@
 
   <!-- Header -->
   <header class="bg-slate-900 border-b border-slate-800 p-4">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-xl font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-shield-halved text-blue-500"></i> SentriForge
@@ -24,7 +25,7 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <nav class="flex gap-2">
+      <nav class="flex flex-wrap gap-2">
         <button id="nav-chat-btn" onclick="switchTab('chat')" class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition">
           <i class="fa-solid fa-robot mr-1"></i> AI Assistant
         </button>
@@ -39,10 +40,15 @@
   <main class="max-w-4xl mx-auto w-full flex-1 p-4 flex flex-col">
 
     <!-- Tab 1: AI Assistant Chat -->
-    <section id="tab-chat" class="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-      <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[65vh]">
+    <section id="tab-chat" class="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg min-h-[500px]">
+      <div class="bg-slate-900/80 px-4 py-3 border-b border-slate-800 flex items-center gap-2">
+        <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-xs text-slate-300 font-medium">SentriForge AI Assistant Online</span>
+      </div>
+
+      <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[60vh]">
         <div class="flex items-start gap-3">
-          <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs">AI</div>
+          <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs shrink-0">SF</div>
           <div class="bg-slate-800 p-3 rounded-lg max-w-md text-sm text-slate-200">
             Hello! I am your SentriForge assistant. How can I help you troubleshoot your IT issue today?
           </div>
@@ -50,7 +56,7 @@
       </div>
 
       <!-- Chat Input Form -->
-      <form id="chat-form" class="p-4 border-t border-slate-800 flex gap-2 bg-slate-900/50">
+      <form id="chat-form" class="p-4 border-t border-slate-800 flex gap-2 bg-slate-900">
         <input type="text" id="chat-input" placeholder="Type your IT support question..." class="flex-1 px-4 py-2 text-sm text-white bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500" required>
         <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
           <i class="fa-solid fa-paper-plane"></i> Send
@@ -70,7 +76,7 @@
 
   </main>
 
-  <!-- Frontend Logic -->
+  <!-- Frontend Logic Script -->
   <script>
     // Tab Switching Logic
     function switchTab(tab) {
@@ -92,27 +98,33 @@
       }
     }
 
-    // Append Chat Messages with Copy Buttons
+    // Append Chat Messages with Markdown & Copy Buttons
     function appendMessage(sender, text) {
       const chatContainer = document.getElementById('chat-messages');
       if (!chatContainer) return;
 
       const messageDiv = document.createElement('div');
-      messageDiv.className = sender === 'user' ? 'flex justify-end' : 'flex justify-start';
-
-      const bubble = document.createElement('div');
-      bubble.className = sender === 'user'
-        ? 'bg-blue-600 text-white p-3 rounded-lg max-w-md text-sm'
-        : 'bg-slate-800 text-slate-200 p-3 rounded-lg max-w-lg text-sm space-y-2';
+      messageDiv.className = sender === 'user' ? 'flex justify-end' : 'flex items-start gap-3';
 
       if (sender === 'user') {
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-blue-600 text-white p-3 rounded-lg max-w-md text-sm';
         bubble.textContent = text;
+        messageDiv.appendChild(bubble);
       } else {
+        const avatar = document.createElement('div');
+        avatar.className = 'bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs shrink-0';
+        avatar.textContent = 'SF';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-slate-800 text-slate-200 p-3 rounded-lg max-w-lg text-sm space-y-2';
         bubble.innerHTML = marked.parse(text);
         addCopyButtonsToMessage(bubble);
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
       }
 
-      messageDiv.appendChild(bubble);
       chatContainer.appendChild(messageDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
@@ -140,59 +152,79 @@
       });
     }
 
-  // Handle Chat Form Submission
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('chat-input');
+    // Handle Chat Form Submission
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
 
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const message = chatInput.value.trim();
-  if (!message) return;
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
 
-  chatInput.value = '';
-  await handleUserSubmit(message);
-});
-
-async function handleUserSubmit(userText) {
-  // 1. Render user message
-  appendMessage('user', userText);
-
-  // 2. Add temporary typing indicator
-  const chatContainer = document.getElementById('chat-messages');
-  const loadingDiv = document.createElement('div');
-  loadingDiv.id = 'typing-indicator';
-  loadingDiv.className = 'flex justify-start my-2';
-  loadingDiv.innerHTML = `
-    <div class="bg-slate-800 text-slate-400 p-3 rounded-lg text-xs italic">
-      <i class="fa-solid fa-spinner fa-spin mr-1"></i> SentriForge AI is thinking...
-    </div>
-  `;
-  chatContainer.appendChild(loadingDiv);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  try {
-    // 3. Request dynamic answer from backend
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: userText })
+      chatInput.value = '';
+      await handleUserSubmit(message);
     });
-    
-    const data = await res.json();
 
-    // 4. Remove typing indicator
-    document.getElementById('typing-indicator')?.remove();
+    async function handleUserSubmit(userText) {
+      appendMessage('user', userText);
 
-    if (res.ok && data.reply) {
-      appendMessage('bot', data.reply);
-    } else {
-      appendMessage('bot', `Error: ${data.error || 'Failed to get response from AI.'}`);
+      // Add loading / typing indicator
+      const chatContainer = document.getElementById('chat-messages');
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'typing-indicator';
+      loadingDiv.className = 'flex items-start gap-3';
+      loadingDiv.innerHTML = `
+        <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs shrink-0">SF</div>
+        <div class="bg-slate-800 text-slate-400 p-3 rounded-lg text-xs italic">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> SentriForge AI is analyzing your issue...
+        </div>
+      `;
+      chatContainer.appendChild(loadingDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: userText })
+        });
+        
+        const data = await res.json();
+
+        // Remove typing indicator
+        document.getElementById('typing-indicator')?.remove();
+
+        if (res.ok && data.reply) {
+          appendMessage('bot', data.reply);
+        } else {
+          appendMessage('bot', `Error: ${data.error || 'Failed to get response from AI.'}`);
+        }
+      } catch (err) {
+        document.getElementById('typing-indicator')?.remove();
+        appendMessage('bot', 'Error: Could not connect to AI assistant server.');
+      }
     }
-  } catch (err) {
-    document.getElementById('typing-indicator')?.remove();
-    appendMessage('bot', 'Error: Could not connect to AI assistant server.');
-  }
-}
+
+    // Fetch and Load Knowledge Base Articles dynamically
+    async function loadKnowledgeBase() {
+      const kbContainer = document.getElementById('kb-articles-list');
+      if (!kbContainer) return;
+
+      try {
+        const response = await fetch('/api/kb');
+        const articles = await response.json();
+
+        kbContainer.innerHTML = articles.map(art => `
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg hover:border-blue-500/50 cursor-pointer transition" onclick="queryKBAI('${art.title.replace(/'/g, "\\'")}')">
+            <span class="text-xs text-blue-400 font-semibold uppercase">${art.category}</span>
+            <h3 class="font-semibold text-white mt-1">${art.title}</h3>
+            <p class="text-sm text-slate-300 mt-1">${art.content}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.warn('Could not fetch KB articles from server:', err);
+      }
+    }
 
     // Query AI directly by clicking a KB Card
     function queryKBAI(title) {
