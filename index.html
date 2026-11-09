@@ -232,7 +232,7 @@
       chatContainer.appendChild(loadingDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      try {
+     try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -249,10 +249,8 @@
         }
       } catch (err) {
         document.getElementById('typing-indicator')?.remove();
-        appendMessage('bot', 'Error: Could not connect to AI assistant server.');
+        appendMessage('bot', `Network Error: ${err.message || 'Could not connect to server.'}`);
       }
-    }
-
     async function loadKnowledgeBase() {
       const kbContainer = document.getElementById('kb-articles-list');
       if (!kbContainer) return;

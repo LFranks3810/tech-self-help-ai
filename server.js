@@ -78,6 +78,48 @@ User Query: ${prompt}
       contents: fullPrompt,
     });
 
+    // Ensure we handle response text safely
+    const replyText = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text) || 'No text returned from model.';
+    res.json({ reply: replyText });
+  } catch (error) {
+    console.error('API Error Details:', error);
+    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
+  }
+});
+You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
+
+Internal Knowledge Base Context:
+${kbContext}
+
+User Query: ${prompt}
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: fullPrompt,
+    });
+
+    // Ensure we handle response text safely
+    const replyText = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text) || 'No text returned from model.';
+    res.json({ reply: replyText });
+  } catch (error) {
+    console.error('API Error Details:', error);
+    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
+  }
+});
+You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
+
+Internal Knowledge Base Context:
+${kbContext}
+
+User Query: ${prompt}
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: fullPrompt,
+    });
+
     res.json({ reply: response.text });
   } catch (error) {
     console.error('API Error:', error);
