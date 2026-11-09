@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
