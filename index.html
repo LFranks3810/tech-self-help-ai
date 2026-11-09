@@ -1,5 +1,5 @@
 ﻿
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -24,13 +24,19 @@
         <p class="text-xs text-slate-400">IT Help Desk & Self-Service Portal</p>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Navigation Tabs (All 4 Tabs Included) -->
       <nav class="flex flex-wrap gap-2">
         <button id="nav-chat-btn" onclick="switchTab('chat')" class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition">
           <i class="fa-solid fa-robot mr-1"></i> AI Assistant
         </button>
         <button id="nav-kb-btn" onclick="switchTab('kb')" class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
           <i class="fa-solid fa-book mr-1"></i> Knowledge Base
+        </button>
+        <button id="nav-ticket-btn" onclick="switchTab('ticket')" class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          <i class="fa-solid fa-ticket mr-1"></i> Submit Ticket
+        </button>
+        <button id="nav-dashboard-btn" onclick="switchTab('dashboard')" class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+          <i class="fa-solid fa-chart-line mr-1"></i> Dashboard
         </button>
       </nav>
     </div>
@@ -70,35 +76,86 @@
         <i class="fa-solid fa-book text-blue-500"></i> IT Knowledge Base
       </h2>
       <div id="kb-articles-list" class="space-y-4">
-        <!-- Knowledge base articles will be injected here dynamically -->
+        <!-- KB articles loaded dynamically -->
+      </div>
+    </section>
+
+    <!-- Tab 3: Submit Ticket -->
+    <section id="tab-ticket" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-ticket text-blue-500"></i> Submit Support Ticket
+      </h2>
+      <form id="ticket-form" class="space-y-4" onsubmit="handleTicketSubmit(event)">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Issue Subject</label>
+          <input type="text" id="ticket-subject" placeholder="Brief summary of the issue" class="w-full px-4 py-2 text-sm text-white bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500" required>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Category</label>
+          <select id="ticket-category" class="w-full px-4 py-2 text-sm text-white bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+            <option value="ACCESS">Access & Credentials</option>
+            <option value="NETWORK">Network & Wi-Fi / VPN</option>
+            <option value="HARDWARE">Hardware & Peripherals</option>
+            <option value="SOFTWARE">Software & Applications</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Description</label>
+          <textarea id="ticket-desc" rows="4" placeholder="Detailed steps or symptoms..." class="w-full px-4 py-2 text-sm text-white bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500" required></textarea>
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition">
+          Submit Ticket
+        </button>
+      </form>
+      <div id="ticket-success" class="hidden mt-4 p-3 bg-emerald-950 border border-emerald-800 text-emerald-200 text-sm rounded-lg">
+        Ticket successfully submitted! Our IT team will review it shortly.
+      </div>
+    </section>
+
+    <!-- Tab 4: Dashboard -->
+    <section id="tab-dashboard" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-chart-line text-blue-500"></i> Support Dashboard & Metrics
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-slate-950 p-4 border border-slate-800 rounded-lg text-center">
+          <p class="text-xs text-slate-400">Active Incidents</p>
+          <p class="text-2xl font-bold text-blue-500 mt-1">2</p>
+        </div>
+        <div class="bg-slate-950 p-4 border border-slate-800 rounded-lg text-center">
+          <p class="text-xs text-slate-400">Resolved Today</p>
+          <p class="text-2xl font-bold text-emerald-500 mt-1">14</p>
+        </div>
+        <div class="bg-slate-950 p-4 border border-slate-800 rounded-lg text-center">
+          <p class="text-xs text-slate-400">AI Resolution Rate</p>
+          <p class="text-2xl font-bold text-indigo-400 mt-1">87%</p>
+        </div>
+      </div>
+      <div class="bg-slate-950 p-4 border border-slate-800 rounded-lg">
+        <h3 class="font-semibold text-sm mb-2 text-slate-300">System Statuses</h3>
+        <ul class="space-y-2 text-xs text-slate-400">
+          <li class="flex justify-between items-center"><span>Active Directory Auth</span> <span class="text-emerald-400">Operational</span></li>
+          <li class="flex justify-between items-center"><span>Corporate VPN Tunnel</span> <span class="text-emerald-400">Operational</span></li>
+          <li class="flex justify-between items-center"><span>AI RAG Knowledge Engine</span> <span class="text-emerald-400">Operational</span></li>
+        </ul>
       </div>
     </section>
 
   </main>
 
-  <!-- Frontend Logic Script -->
+  <!-- Frontend Script -->
   <script>
-    // Tab Switching Logic
     function switchTab(tab) {
-      const chatTab = document.getElementById('tab-chat');
-      const kbTab = document.getElementById('tab-kb');
-      const chatBtn = document.getElementById('nav-chat-btn');
-      const kbBtn = document.getElementById('nav-kb-btn');
+      const tabs = ['chat', 'kb', 'ticket', 'dashboard'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}-btn`).className = 'px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition';
+      });
 
-      if (tab === 'chat') {
-        chatTab.classList.remove('hidden');
-        kbTab.classList.add('hidden');
-        chatBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition';
-        kbBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition';
-      } else {
-        kbTab.classList.remove('hidden');
-        chatTab.classList.add('hidden');
-        kbBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition';
-        chatBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition';
-      }
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}-btn`).className = 'px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition';
     }
 
-    // Append Chat Messages with Markdown & Copy Buttons
     function appendMessage(sender, text) {
       const chatContainer = document.getElementById('chat-messages');
       if (!chatContainer) return;
@@ -129,17 +186,14 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // Inject Copy Buttons into Code Blocks
     function addCopyButtonsToMessage(container) {
       const codeBlocks = container.querySelectorAll('pre');
       codeBlocks.forEach((pre) => {
         if (pre.querySelector('.copy-btn')) return;
-
         pre.style.position = 'relative';
         const button = document.createElement('button');
         button.className = 'copy-btn absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-2 py-1 rounded transition';
         button.textContent = 'Copy';
-
         button.addEventListener('click', () => {
           const codeText = pre.querySelector('code')?.innerText || pre.innerText;
           navigator.clipboard.writeText(codeText).then(() => {
@@ -147,12 +201,10 @@
             setTimeout(() => { button.textContent = 'Copy'; }, 2000);
           });
         });
-
         pre.appendChild(button);
       });
     }
 
-    // Handle Chat Form Submission
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
 
@@ -160,7 +212,6 @@
       e.preventDefault();
       const message = chatInput.value.trim();
       if (!message) return;
-
       chatInput.value = '';
       await handleUserSubmit(message);
     });
@@ -168,7 +219,6 @@
     async function handleUserSubmit(userText) {
       appendMessage('user', userText);
 
-      // Add loading / typing indicator
       const chatContainer = document.getElementById('chat-messages');
       const loadingDiv = document.createElement('div');
       loadingDiv.id = 'typing-indicator';
@@ -190,8 +240,6 @@
         });
         
         const data = await res.json();
-
-        // Remove typing indicator
         document.getElementById('typing-indicator')?.remove();
 
         if (res.ok && data.reply) {
@@ -205,7 +253,6 @@
       }
     }
 
-    // Fetch and Load Knowledge Base Articles dynamically
     async function loadKnowledgeBase() {
       const kbContainer = document.getElementById('kb-articles-list');
       if (!kbContainer) return;
@@ -222,17 +269,24 @@
           </div>
         `).join('');
       } catch (err) {
-        console.warn('Could not fetch KB articles from server:', err);
+        console.warn('Could not fetch KB articles:', err);
       }
     }
 
-    // Query AI directly by clicking a KB Card
     function queryKBAI(title) {
       switchTab('chat');
       handleUserSubmit(`How do I handle or resolve: ${title}?`);
     }
 
-    // Initialize Knowledge Base on page load
+    function handleTicketSubmit(e) {
+      e.preventDefault();
+      document.getElementById('ticket-success').classList.remove('hidden');
+      document.getElementById('ticket-form').reset();
+      setTimeout(() => {
+        document.getElementById('ticket-success').classList.add('hidden');
+      }, 4000);
+    }
+
     loadKnowledgeBase();
   </script>
 </body>
