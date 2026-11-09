@@ -7,6 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
+// CRITICAL: Render provides a dynamic port via process.env.PORT. Fall back to 3000 for local testing.
 const PORT = process.env.PORT || 3000;
 
 // Setup directory pathing for ES modules
@@ -16,8 +17,13 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.static(__dirname)); // Serve index.html and static files
 
-// Initialize Gemini Client explicitly with the environment variable
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize Gemini Client
+let ai;
+try {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+} catch (err) {
+  console.error('Failed to initialize GoogleGenAI client:', err);
+}
 
 // Knowledge Base Data Store
 const kbArticles = [
@@ -35,7 +41,6 @@ const kbArticles = [
   }
 ];
 
-// Helper: Query matching KB context
 function findRelevantKB(userQuery) {
   const queryLower = userQuery.toLowerCase();
   const matches = kbArticles.filter(art => 
@@ -45,16 +50,13 @@ function findRelevantKB(userQuery) {
   );
 
   if (matches.length === 0) return 'No specific internal KB articles found for this issue.';
-
   return matches.map(art => `[${art.category}] ${art.title}: ${art.content}`).join('\n');
 }
 
-// API Route: Return Knowledge Base Articles
 app.get('/api/kb', (req, res) => {
   res.json(kbArticles);
 });
 
-// API Route: Gemini Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -62,14 +64,11 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required.' });
     }
 
-    // Ensure API Key exists
     if (!process.env.GEMINI_API_KEY) {
-      console.error('API Key Missing: GEMINI_API_KEY is undefined on environment.');
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY is missing on server environment.' });
     }
 
     const kbContext = findRelevantKB(prompt);
-
     const fullPrompt = `
 You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
 
@@ -79,19 +78,18 @@ ${kbContext}
 User Query: ${prompt}
 `;
 
-    // Call Gemini API
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: fullPrompt,
     });
 
-    if (!response || !response.text) {
-      throw new Error('Received empty response from Gemini SDK.');
-    }
-
     res.json({ reply: response.text });
   } catch (error) {
-    console.error('Error generating AI response:', error.message || error);
-    res.status(500).json({ error: `AI Processing Error: ${error.message || 'Failed to generate response'}` });
+    console.error('API Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
   }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`SentriForge server running on port ${PORT}`);
 });
