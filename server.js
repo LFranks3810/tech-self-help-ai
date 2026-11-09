@@ -62,6 +62,12 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required.' });
     }
 
+    // Ensure API Key exists
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('API Key Missing: GEMINI_API_KEY is undefined on environment.');
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+    }
+
     const kbContext = findRelevantKB(prompt);
 
     const fullPrompt = `
@@ -73,18 +79,19 @@ ${kbContext}
 User Query: ${prompt}
 `;
 
+    // Call Gemini API
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: fullPrompt,
     });
 
+    if (!response || !response.text) {
+      throw new Error('Received empty response from Gemini SDK.');
+    }
+
     res.json({ reply: response.text });
   } catch (error) {
-    console.error('Error generating AI response:', error);
-    res.status(500).json({ error: 'Failed to process AI response.' });
+    console.error('Error generating AI response:', error.message || error);
+    res.status(500).json({ error: `AI Processing Error: ${error.message || 'Failed to generate response'}` });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`SentriForge server running at http://localhost:${PORT}`);
 });
