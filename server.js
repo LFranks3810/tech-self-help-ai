@@ -78,11 +78,10 @@ ${kbContext}
 User Query: ${prompt}
 `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+   const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
       contents: fullPrompt,
     });
-
     res.json({ reply: response.text });
   } catch (error) {
     console.error('API Error:', error);
