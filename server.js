@@ -1,4 +1,11 @@
-﻿import express from 'express';
+﻿
+// Add this near your other routes in server.js
+app.get('/', (req, res) => {
+  res.send('SentriForge API Server is running successfully!');
+});
+
+
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
