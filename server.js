@@ -1,4 +1,5 @@
 ﻿import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,13 +7,15 @@ import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenAI } = require('@google/genai');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve static frontend files if they are in a folder named 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize the Google Gen AI SDK client securely using environment variables
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -27,7 +30,8 @@ async function generateWithRetry(params, maxRetries = 3, initialDelay = 1000) {
     try {
       return await ai.models.generateContent(params);
     } catch (error) {
-      const isOverloaded = error.status === 503 || error.code === 503 || (error.message && error.message.includes('high demand'));
+      const isOverloaded = error.status === 503 || error.code === 503 || 
+        (error.message && error.message.includes('high demand'));
       
       if (isOverloaded && attempt < maxRetries) {
         console.warn(`[Gemini API] 503 High Demand encountered. Retrying in ${delay}ms (Attempt ${attempt}/${maxRetries})...`);
