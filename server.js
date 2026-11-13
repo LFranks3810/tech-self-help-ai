@@ -6,127 +6,88 @@ import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
+const express = require('express');
+const cors = require('cors');
+const { GoogleGenAI } = require('@google/genai');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(cors());
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI();
+// Initialize the Google Gen AI SDK client securely using environment variables
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Knowledge Base Articles (All 3 Included)
-const kbArticles = [
-  {
-    id: 'kb-1',
-    category: 'ACCESS',
-    title: 'Active Directory Password Reset',
-    content: 'Use the self-service portal or contact IT administrators to reset corporate credentials securely.'
-  },
-  {
-    id: 'kb-2',
-    category: 'NETWORK',
-    title: 'VPN Connection Failure & MFA',
-    content: 'Verify your Microsoft Authenticator push notification token and re-authenticate your secure tunnel session.'
-  },
-  {
-    id: 'kb-3',
-    category: 'HARDWARE',
-    title: 'Wi-Fi & Network Adapter Troubleshooting',
-    content: 'Restart your wireless adapter, flush DNS configurations via command prompt, and ensure your DHCP lease is renewed.'
+/**
+ * Helper function with exponential backoff for Gemini API calls
+ */
+async function generateWithRetry(params, maxRetries = 3, initialDelay = 1000) {
+  let delay = initialDelay;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (error) {
+      const isOverloaded = error.status === 503 || error.code === 503 || (error.message && error.message.includes('high demand'));
+      
+      if (isOverloaded && attempt < maxRetries) {
+        console.warn(`[Gemini API] 503 High Demand encountered. Retrying in ${delay}ms (Attempt ${attempt}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Double the wait time for exponential backoff
+      } else {
+        throw error; // Re-throw if it's not a 503 or if we ran out of retries
+      }
+    }
   }
-];
-
-function findRelevantKB(userQuery) {
-  const queryLower = userQuery.toLowerCase();
-  const matches = kbArticles.filter(art => 
-    art.title.toLowerCase().includes(queryLower) || 
-    art.content.toLowerCase().includes(queryLower) ||
-    art.category.toLowerCase().includes(queryLower)
-  );
-
-  if (matches.length === 0) return 'No specific internal KB articles found for this issue.';
-  return matches.map(art => `[${art.category}] ${art.title}: ${art.content}`).join('\n');
 }
 
-app.get('/api/kb', (req, res) => {
-  res.json(kbArticles);
-});
-
+/**
+ * Chat API Endpoint with Model Fallback
+ */
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt } = req.body;
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required.' });
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message content is required." });
     }
 
-    const kbContext = findRelevantKB(prompt);
-    const fullPrompt = `
-You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
+    let response;
 
-Internal Knowledge Base Context:
-${kbContext}
+    try {
+      // Primary attempt using the main model
+      response = await generateWithRetry({
+        model: 'gemini-2.5-flash',
+        contents: message,
+      });
+    } catch (primaryError) {
+      if (primaryError.status === 503 || primaryError.code === 503) {
+        console.warn("[Gemini API] Primary model overloaded. Falling back to alternative model...");
+        
+        // Secondary fallback attempt on an alternative flash model
+        response = await generateWithRetry({
+          model: 'gemini-2.0-flash',
+          contents: message,
+        });
+      } else {
+        throw primaryError;
+      }
+    }
 
-User Query: ${prompt}
-`;
+    // Send the generated text back to your frontend UI
+    res.json({ response: response.text });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: fullPrompt,
-    });
-
-    // Ensure we handle response text safely
-    const replyText = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text) || 'No text returned from model.';
-    res.json({ reply: replyText });
   } catch (error) {
-    console.error('API Error Details:', error);
-    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
-  }
-});
-You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
-
-Internal Knowledge Base Context:
-${kbContext}
-
-User Query: ${prompt}
-`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: fullPrompt,
+    console.error("Backend Chat Error:", error);
+    
+    // Return a clean user-facing error message instead of raw JSON stacks
+    const statusCode = error.status || 500;
+    res.status(statusCode).json({ 
+      error: "The AI assistant is currently experiencing heavy load. Please try your request again in a moment." 
     });
-
-    // Ensure we handle response text safely
-    const replyText = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text) || 'No text returned from model.';
-    res.json({ reply: replyText });
-  } catch (error) {
-    console.error('API Error Details:', error);
-    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
-  }
-});
-You are the SentriForge IT Support Assistant. Provide concise, helpful IT troubleshooting steps based on the provided internal Knowledge Base context. If the issue is not covered in the Knowledge Base, provide clear standard IT troubleshooting guidelines.
-
-Internal Knowledge Base Context:
-${kbContext}
-
-User Query: ${prompt}
-`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: fullPrompt,
-    });
-
-    res.json({ reply: response.text });
-  } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: error.message || 'Failed to process AI response.' });
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`SentriForge server running on port ${PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
