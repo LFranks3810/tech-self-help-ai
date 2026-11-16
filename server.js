@@ -1,104 +1,74 @@
-
-// Add this near your other routes in server.js
-app.get('/', (req, res) => {
-  res.send('SentriForge API Server is running successfully!');
-});
-
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(express.static('.'));
 
-// Serve static frontend files if they are in a folder named 'public'
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Initialize the Google Gen AI SDK client securely using environment variables
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-/**
- * Helper function with exponential backoff for Gemini API calls
- */
-async function generateWithRetry(params, maxRetries = 3, initialDelay = 1000) {
-  let delay = initialDelay;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await ai.models.generateContent(params);
-    } catch (error) {
-      const isOverloaded = error.status === 503 || error.code === 503 || 
-        (error.message && error.message.includes('high demand'));
-      
-      if (isOverloaded && attempt < maxRetries) {
-        console.warn(`[Gemini API] 503 High Demand encountered. Retrying in ${delay}ms (Attempt ${attempt}/${maxRetries})...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Double the wait time for exponential backoff
-      } else {
-        throw error; // Re-throw if it's not a 503 or if we ran out of retries
+// Helper for exponential backoff delay
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function callGeminiWithRetry(promptText, modelName = 'gemini-2.5-flash', retries = 3, delay = 1000) {
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: promptText,
+      config: {
+        systemInstruction: "You are SentriForge AI, an expert IT help desk and infrastructure assistant. Provide clear, technical, step-by-step troubleshooting instructions for IT issues such as network adapters, Active Directory, VPNs, and system permissions."
       }
+    });
+    return response.text;
+  } catch (error) {
+    console.warn(`Attempt with model ${modelName} failed:`, error.message);
+    
+    // If it's a 503 / capacity issue and we have retries left, wait and retry
+    if ((error.status === 503 || error.message?.includes('503') || error.message?.includes('overloaded')) && retries > 0) {
+      console.log(`Retrying in ${delay}ms... (${retries} attempts left)`);
+      await sleep(delay);
+      return callGeminiWithRetry(promptText, modelName, retries - 1, delay * 2);
     }
+
+    // If gemini-2.5-flash fails completely, fallback to gemini-2.0-flash once
+    if (modelName === 'gemini-2.5-flash') {
+      console.log('Falling back to gemini-2.0-flash...');
+      return callGeminiWithRetry(promptText, 'gemini-2.0-flash', 2, 1000);
+    }
+
+    throw error;
   }
 }
 
-/**
- * Chat API Endpoint with Model Fallback
- */
+// Root route to prevent "Cannot GET /"
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: '.' });
+});
+
+// Chat endpoint matching frontend expectation ({ message } -> { response })
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    
     if (!message) {
       return res.status(400).json({ error: "Message content is required." });
     }
 
-    let response;
-
-    try {
-      // Primary attempt using the main model
-      response = await generateWithRetry({
-        model: 'gemini-2.5-flash',
-        contents: message,
-      });
-    } catch (primaryError) {
-      if (primaryError.status === 503 || primaryError.code === 503) {
-        console.warn("[Gemini API] Primary model overloaded. Falling back to alternative model...");
-        
-        // Secondary fallback attempt on an alternative flash model
-        response = await generateWithRetry({
-          model: 'gemini-2.0-flash',
-          contents: message,
-        });
-      } else {
-        throw primaryError;
-      }
-    }
-
-    // Send the generated text back to your frontend UI
-    res.json({ response: response.text });
-
+    const aiResponseText = await callGeminiWithRetry(message);
+    res.json({ response: aiResponseText });
   } catch (error) {
-    console.error("Backend Chat Error:", error);
-    
-    // Return a clean user-facing error message instead of raw JSON stacks
-    const statusCode = error.status || 500;
-    res.status(statusCode).json({ 
-      error: "The AI assistant is currently experiencing heavy load. Please try your request again in a moment." 
+    console.error("Chat API Error:", error);
+    res.status(503).json({ 
+      error: "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later." 
     });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`SentriForge server running on port ${PORT}`);
 });
