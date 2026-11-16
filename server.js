@@ -1,4 +1,4 @@
-﻿
+
 // Add this near your other routes in server.js
 app.get('/', (req, res) => {
   res.send('SentriForge API Server is running successfully!');
