@@ -232,25 +232,25 @@
       chatContainer.appendChild(loadingDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
-     try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: userText })
-        });
-        
-        const data = await res.json();
-        document.getElementById('typing-indicator')?.remove();
+  try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
 
-        if (res.ok && data.reply) {
-          appendMessage('bot', data.reply);
-        } else {
-          appendMessage('bot', `Error: ${data.error || 'Failed to get response from AI.'}`);
-        }
-      } catch (err) {
-        document.getElementById('typing-indicator')?.remove();
-        appendMessage('bot', `Network Error: ${err.message || 'Could not connect to server.'}`);
+      const data = await res.json();
+      document.getElementById('typing-indicator')?.remove();
+
+      if (res.ok) {
+        appendMessage('SF', data.response);
+      } else {
+        appendMessage('SF', data.error || "The AI assistant is temporarily busy. Please try again.");
       }
+    } catch (err) {
+      document.getElementById('typing-indicator')?.remove();
+      appendMessage('SF', "Could not connect to AI assistant server.");
+    }
     async function loadKnowledgeBase() {
       const kbContainer = document.getElementById('kb-articles-list');
       if (!kbContainer) return;
