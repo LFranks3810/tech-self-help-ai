@@ -25,7 +25,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.5-flash-lite',
       contents: message,
       config: {
         systemInstruction: "You are SentriForge AI, an expert IT help desk and infrastructure assistant. Provide clear, technical, step-by-step troubleshooting instructions for IT issues."
@@ -36,7 +36,7 @@ app.post('/api/chat', async (req, res) => {
   } catch (error) {
     console.error("Chat API Error:", error);
     res.status(503).json({ 
-      error: "This model is currently experiencing high demand. Please try again in a moment." 
+      error: "The AI service is currently busy. Please wait 30 seconds and try again." 
     });
   }
 });
