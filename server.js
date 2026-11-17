@@ -1,22 +1,47 @@
-async function callGeminiWithRetry(promptText, modelName = 'gemini-1.5-flash', retries = 3, delay = 1000) {
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('.'));
+
+const apiKey = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: apiKey });
+
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: '.' });
+});
+
+app.post('/api/chat', async (req, res) => {
   try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: promptText,
-      config: {
-        systemInstruction: "You are SentriForge AI, an expert IT help desk and infrastructure assistant. Provide clear, technical, step-by-step troubleshooting instructions for IT issues such as network adapters, Active Directory, VPNs, and system permissions."
-      }
-    });
-    return response.text;
-  } catch (error) {
-    console.warn(`Attempt with model ${modelName} failed:`, error.message);
-    
-    if (retries > 0) {
-      console.log(`Retrying in ${delay}ms... (${retries} attempts left)`);
-      await sleep(delay);
-      return callGeminiWithRetry(promptText, modelName, retries - 1, delay * 2);
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Message content is required." });
     }
 
-    throw error;
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: message,
+      config: {
+        systemInstruction: "You are SentriForge AI, an expert IT help desk and infrastructure assistant. Provide clear, technical, step-by-step troubleshooting instructions for IT issues."
+      }
+    });
+
+    res.json({ response: response.text });
+  } catch (error) {
+    console.error("Chat API Error:", error);
+    res.status(503).json({ 
+      error: "This model is currently experiencing high demand. Please try again in a moment." 
+    });
   }
-}
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`SentriForge server running on port ${PORT}`);
+});
